@@ -39,6 +39,7 @@ pub async fn get_status_with_comment(c: &Client, status: IngInfo) -> Result<IngD
 pub async fn get_status(c: &Client, id: u64) -> Result<IngInfo> {
     raw_get_status(c, id)
         .await?
+        .error_for_status()?
         .json()
         .await
         .into_anyhow_result()
@@ -47,6 +48,7 @@ pub async fn get_status(c: &Client, id: u64) -> Result<IngInfo> {
 pub async fn list_comments(c: &Client, id: u64) -> Result<Vec<IngComment>> {
     raw_list_comments(c, id)
         .await?
+        .error_for_status()?
         .json()
         .await
         .into_anyhow_result()

@@ -16,6 +16,8 @@ pub struct Cli {
     pub verbose: bool,
     #[arg(long, short = 's', global = true, default_value_t = Style::Pretty, help = "输出样式")]
     pub style: Style,
+    #[arg(long, global = true, help = "全局请求超时时间（秒）")]
+    pub timeout: Option<u64>,
     #[command(subcommand)]
     pub commands: Commands,
 }

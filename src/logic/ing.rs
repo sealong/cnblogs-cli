@@ -9,7 +9,7 @@ use crate::tools::http::IntoNoParseResult;
 use crate::{
     api,
     commands::ing::{
-        IngAction, IngContent, IngDelete, IngListArg, IngReplayContent, IngShowDetail,
+        IngAction, IngContent, IngDelete, IngListArg, IngReplyContent, IngShowDetail,
     },
 };
 
@@ -18,7 +18,7 @@ pub async fn endpoint(cmd: IngAction, ctx: &mut Context) -> Result<()> {
         IngAction::List(action) => handle_list_action(action, ctx).await?,
         IngAction::Create(action) => handle_create_action(action, ctx).await?,
         IngAction::Delete(action) => handle_delete_action(action, ctx).await?,
-        IngAction::Replay(action) => handle_replay_action(action, ctx).await?,
+        IngAction::Reply(action) => handle_reply_action(action, ctx).await?,
         IngAction::Show(action) => handle_show_action(action, ctx).await?,
     };
     Ok(())
@@ -88,7 +88,7 @@ async fn handle_create_action(action: IngContent, ctx: &mut Context) -> Result<(
 }
 
 /// 回复功能实现
-async fn handle_replay_action(action: IngReplayContent, ctx: &mut Context) -> Result<()> {
+async fn handle_reply_action(action: IngReplyContent, ctx: &mut Context) -> Result<()> {
     let a = api::ing::raw_create_comment(&ctx.client, action.id, action.content)
         .await?
         .into_no_parse_result()

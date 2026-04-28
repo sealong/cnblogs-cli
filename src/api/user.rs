@@ -12,7 +12,12 @@ pub async fn raw_user_info(c: &Client) -> Result<Response> {
 }
 
 pub async fn user_info(c: &Client) -> Result<UserInfo> {
-    raw_user_info(c).await?.json().await.into_anyhow_result()
+    raw_user_info(c)
+        .await?
+        .error_for_status()?
+        .json()
+        .await
+        .into_anyhow_result()
 }
 
 /// 获取用户粉丝列表的原始响应
@@ -37,6 +42,7 @@ pub async fn user_followers(
 ) -> Result<UserFollow> {
     raw_user_followers(c, page)
         .await?
+        .error_for_status()?
         .json()
         .await
         .into_anyhow_result()
@@ -64,6 +70,7 @@ pub async fn user_following(
 ) -> Result<UserFollow> {
     raw_user_following(c, page)
         .await?
+        .error_for_status()?
         .json()
         .await
         .into_anyhow_result()

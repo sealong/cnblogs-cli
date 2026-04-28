@@ -19,7 +19,12 @@ pub struct ListArgs {
     #[arg(long = "page-index", default_value_t = 1)]
     pub page_index: u64,
 
-    /// 每页显示的条数，默认20
+    /// 每页显示的条数，默认10
     #[arg(long = "page-size", default_value_t = 10)]
     pub page_size: u64,
+
+    /// 仅输出新闻标题
+    #[arg(long = "title-only", default_value_t = false)]
+    #[serde(skip)]
+    pub title_only: bool,
 }

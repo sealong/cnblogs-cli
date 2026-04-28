@@ -53,7 +53,7 @@ pub enum IngAction {
     Create(IngContent),
     Delete(IngDelete),
     List(IngListArg),
-    Replay(IngReplayContent),
+    Reply(IngReplyContent),
     Show(IngShowDetail),
 }
 
@@ -114,8 +114,7 @@ pub struct IngContent {
     /// tag标签，可选，如lucky，python
     #[arg(short = 't',
         long = "tag",
-        // required_if_eq("content", "None"),
-        requires_if("false", "content"),
+        required_unless_present = "content",
         value_parser = NonEmptyStringValueParser::new())]
     pub tag: Vec<String>,
 }
@@ -168,7 +167,7 @@ pub struct IngDelete {
 
 /// 评论回复，to实现@功能，
 #[derive(Debug, Args)]
-pub struct IngReplayContent {
+pub struct IngReplyContent {
     #[clap(value_parser = NonEmptyStringValueParser::new())]
     pub content: String,
 

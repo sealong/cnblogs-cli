@@ -13,9 +13,16 @@ pub async fn endpoint(cmd: NewsCommand, ctx: &mut Context) -> Result<()> {
 }
 
 async fn handle_list(arg: ListArgs, ctx: &mut Context) -> Result<()> {
-    api::news::list_news(&ctx.client, arg)
-        .await?
-        .into_iter()
-        .for_each(|x| ctx.terminal.writeln(x.into_format()).unwrap());
+    let title_only = arg.title_only;
+    let news_list = api::news::list_news(&ctx.client, arg).await?;
+    
+    for news in news_list {
+        if title_only {
+            ctx.terminal.writeln(news.title)?;
+        } else {
+            ctx.terminal.writeln(news.into_format())?;
+        }
+    }
+    
     Ok(())
 }

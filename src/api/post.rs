@@ -13,10 +13,8 @@ pub async fn list_someone_post(
     blog_app: &String,
     params: impl Serialize + Send + Sync,
 ) -> Result<Vec<PostInfo>> {
-    // let a = raw_list_someone_post(c, blog_app).await?;
-    // a.json().await.into_anyhow_result()
-    raw_list_someone_post(c, blog_app, params)
-        .await?
+    let resp = raw_list_someone_post(c, blog_app, params).await?;
+    resp.error_for_status()?
         .json()
         .await
         .into_anyhow_result()
@@ -83,11 +81,6 @@ pub async fn raw_create_comment(
         .await
         .into_anyhow_result()
 }
-
-// pub async fn raw_post_detail(c: &Client, id: u64) -> Result<Response> {
-//     let url = format!("{}/{}", BLOG_BACKEND_POST, id);
-//     c.get(url).send().await.into_anyhow_result()
-// }
 
 fn gen_comments_url(blog_app: &String, id: u64) -> String {
     format!(

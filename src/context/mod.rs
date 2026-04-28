@@ -27,7 +27,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new() -> Result<Self> {
+    pub fn new(timeout: Option<u64>) -> Result<Self> {
         let path = CacheDir::new()?;
         path.init()?;
         let buf = path.read()?;
@@ -41,11 +41,16 @@ impl Context {
             headers.append("authorization-type", "pat".parse()?);
         }
 
-        let client = ClientBuilder::new()
+        let mut builder = ClientBuilder::new()
             .default_headers(headers)
             .connect_timeout(time::Duration::from_secs(10))
-            .https_only(true)
-            .build()?;
+            .https_only(true);
+
+        if let Some(secs) = timeout {
+            builder = builder.timeout(time::Duration::from_secs(secs));
+        }
+
+        let client = builder.build()?;
 
         Ok(Self {
             terminal,

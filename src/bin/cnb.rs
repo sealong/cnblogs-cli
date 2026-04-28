@@ -6,7 +6,7 @@ use cnblogs_lib::{commands::Cli, logic};
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    let mut ctx = Context::new()?;
+    let mut ctx = Context::new(cli.timeout)?;
     ctx.json = cli.json;
     logic::run(cli, &mut ctx).await?;
     Ok(())
