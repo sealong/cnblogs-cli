@@ -16,9 +16,9 @@ async fn handle_list(arg: ListArgs, ctx: &mut Context) -> Result<()> {
     let title_only = arg.title_only;
     let news_list = api::news::list_news(&ctx.client, arg).await?;
     
-    for news in news_list {
+    for (index, news) in news_list.into_iter().enumerate() {
         if title_only {
-            ctx.terminal.writeln(news.title)?;
+            ctx.terminal.writeln(news.into_title_format(index))?;
         } else {
             ctx.terminal.writeln(news.into_format())?;
         }
@@ -26,3 +26,4 @@ async fn handle_list(arg: ListArgs, ctx: &mut Context) -> Result<()> {
     
     Ok(())
 }
+

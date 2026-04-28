@@ -32,6 +32,14 @@ impl NewsInfo {
             dc = self.digg_count,
         )
     }
+
+    pub fn into_title_format(self, index: usize) -> String {
+        format!(
+            "{index:>4}. {title}",
+            index = index + 1,
+            title = self.title
+        ).bright_white().to_string()
+    }
 }
 
 #[cfg(test)]
