@@ -73,8 +73,8 @@ pub mod rfc3339_or_naive {
             return Ok(dt.with_timezone(&Utc));
         }
 
-        // 2026-01-22T18:35:49.593
-        if let Ok(ndt) = NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S%.3f") {
+        // 支持带任意位数小数秒的日期，例如: 2026-01-22T18:35:49.593 或 2026-05-04T13:42:35.51
+        if let Ok(ndt) = NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S%.f") {
             let ndt = ndt - Duration::from_hours(8);
             return Ok(Utc.from_utc_datetime(&ndt));
         }
