@@ -55,7 +55,7 @@ impl fmt::Display for Style {
 }
 
 // 验证不能为零
-fn validate_non_zero_id(s: &str) -> Result<u64, String> {
+pub(crate) fn validate_non_zero_id(s: &str) -> Result<u64, String> {
     let id = s
         .parse::<u64>()
         .map_err(|_| format!("'{}' 不是有效的数字", s))?;

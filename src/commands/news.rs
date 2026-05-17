@@ -1,6 +1,8 @@
 use clap::{Args, Subcommand};
 use serde::Serialize;
 
+use crate::commands::validate_non_zero_id;
+
 #[derive(Debug, Args)]
 pub struct NewsCommand {
     #[clap(subcommand)]
@@ -10,6 +12,7 @@ pub struct NewsCommand {
 #[derive(Debug, Subcommand)]
 pub enum NewsAction {
     List(ListArgs),
+    Show(ShowArgs),
 }
 
 #[derive(Debug, Args, Serialize)]
@@ -27,4 +30,13 @@ pub struct ListArgs {
     #[arg(long = "title-only", default_value_t = false)]
     #[serde(skip)]
     pub title_only: bool,
+}
+
+/// 展示新闻内容
+#[derive(Debug, Args, Serialize)]
+pub struct ShowArgs {
+    /// 新闻ID，必传
+    #[serde(skip)]
+    #[clap(value_parser = validate_non_zero_id, required = true)]
+    pub id: u64,
 }
