@@ -31,7 +31,7 @@ async fn handle_list_action(action: IngListArg, ctx: &mut Context) -> Result<()>
     match (action.no_comment, ctx.json) {
         // 不显示评论，json格式输出。
         (true, true) => {
-            ctx.terminal.writeln(serde_json::to_string_pretty(&resp)?)?;
+            ctx.terminal.json(&resp)?;
         }
         // 不显示评论，pretty输出。
         (true, false) => {
@@ -42,7 +42,7 @@ async fn handle_list_action(action: IngListArg, ctx: &mut Context) -> Result<()>
         (false, true) => {
             for i in resp {
                 let ing = api::ing::get_status_with_comment(&ctx.client, i).await?;
-                ctx.terminal.writeln(serde_json::to_string_pretty(&ing)?)?;
+                ctx.terminal.json(&ing)?;
             }
         }
         // 显示评论，pretty输出。

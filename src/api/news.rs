@@ -2,7 +2,7 @@ use anyhow::Result;
 use reqwest::{Client, Response};
 use serde::Serialize;
 
-use crate::{api::urls::OPENAPI, models::news::NewsInfo, tools::IntoAnyhowResult};
+use crate::{api::urls::OPENAPI, models::news::{NewsInfo, NewsDetail}, tools::IntoAnyhowResult};
 
 pub async fn list_news(c: &Client, page: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
     let resp = raw_list_news(c, page).await?;
@@ -21,10 +21,10 @@ pub async fn raw_list_news(c: &Client, page: impl Serialize + Send + Sync) -> Re
     .into_anyhow_result()
 }
 
-pub async fn get_news_detail(c: &Client, id: u64) -> Result<String> {
+pub async fn get_news_detail(c: &Client, id: u64) -> Result<NewsDetail> {
     let resp = raw_get_news_detail(c, id).await?;
     resp.error_for_status()?
-        .text()
+        .json()
         .await
         .into_anyhow_result()
 }

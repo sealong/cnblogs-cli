@@ -30,10 +30,19 @@ async fn handle_list(arg: ListArgs, ctx: &mut Context) -> Result<()> {
 }
 
 async fn handle_show(arg: ShowArgs, ctx: &mut Context) -> Result<()> {
-    let resp = api::news::get_news_detail(&ctx.client, arg.id).await?;
+    let detail = api::news::get_news_detail(&ctx.client, arg.id).await?;
+
+    if ctx.json {
+        ctx.terminal.json(&detail)?;
+        return Ok(());
+    }
+
+    // 显示标题栏
+    ctx.terminal.writeln(detail.into_header_format())?;
 
     // 转换HTML为Markdown并在终端渲染
-    let md = html2md::parse_html(&resp);
+    let clean_content = detail.clean_content();
+    let md = html2md::parse_html(&clean_content);
     let mds = MadSkin::default_light();
     mds.write_text_on(&mut ctx.terminal.stdout, &md)?;
     Ok(())

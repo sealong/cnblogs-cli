@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use owo_colors::OwoColorize;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::tools::timer::DateFormatExt;
 
@@ -39,6 +39,55 @@ impl NewsInfo {
             index = index + 1,
             title = self.title
         ).bright_white().to_string()
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+#[serde(rename_all = "PascalCase")]
+pub struct NewsDetail {
+    pub news_id: u64,
+    #[serde(default, deserialize_with = "deserialize_tags")]
+    pub tags: Option<Vec<String>>,
+    pub author: String,
+    pub title: String,
+    pub publish_time: String,
+    pub pic_name: Option<String>,
+    pub content: String,
+}
+
+fn deserialize_tags<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Tags {
+        Array(Vec<String>),
+        String(String),
+        Null,
+    }
+
+    match Tags::deserialize(deserializer)? {
+        Tags::Array(v) => Ok(Some(v)),
+        Tags::String(s) => Ok(Some(vec![s])),
+        Tags::Null => Ok(None),
+    }
+}
+
+impl NewsDetail {
+    pub fn into_header_format(&self) -> String {
+        let separator = "=".repeat(80);
+        format!(
+            "{separator}\n{title}\n作者: {author}  |  发布时间: {time}  |  ID: #{id}\n{separator}\n",
+            title = self.title.bold().bright_cyan(),
+            author = self.author.yellow(),
+            time = self.publish_time,
+            id = self.news_id.bright_green(),
+        )
+    }
+
+    pub fn clean_content(&self) -> String {
+        self.content.replace("\r\n", "\n")
     }
 }
 
