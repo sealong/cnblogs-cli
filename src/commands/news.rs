@@ -13,6 +13,7 @@ pub struct NewsCommand {
 pub enum NewsAction {
     List(ListArgs),
     Show(ShowArgs),
+    Search(SearchArgs),
 }
 
 #[derive(Debug, Args, Serialize)]
@@ -39,4 +40,32 @@ pub struct ShowArgs {
     #[serde(skip)]
     #[clap(value_parser = validate_non_zero_id, required = true)]
     pub id: u64,
+}
+
+/// 搜索新闻
+#[derive(Debug, Args, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchArgs {
+    /// 搜索关键字
+    #[serde(rename = "keyWords")]
+    pub keywords: String,
+
+    /// 分页页码（从1开始）
+    #[arg(long = "page-index", default_value_t = 1)]
+    pub page_index: u64,
+
+    /// 开始日期 (格式: YYYY-MM-DD)
+    #[arg(long = "start-date")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_date: Option<String>,
+
+    /// 结束日期 (格式: YYYY-MM-DD)
+    #[arg(long = "end-date")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_date: Option<String>,
+
+    /// 最低浏览次数
+    #[arg(long = "min-views")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub view_times_at_least: Option<u64>,
 }

@@ -44,6 +44,50 @@ impl NewsInfo {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "PascalCase")]
+pub struct ZzkDocument {
+    pub title: String,
+    pub content: String,
+    pub user_name: Option<String>,
+    pub user_alias: Option<String>,
+    pub publish_time: String,
+    pub vote_times: i64,
+    pub view_times: i64,
+    pub comment_times: i64,
+    pub uri: String,
+    pub id: String,
+}
+
+fn strip_html(s: &str) -> String {
+    let re = regex::Regex::new(r"<[^>]*>").unwrap();
+    re.replace_all(s, "").into_owned()
+}
+
+impl ZzkDocument {
+    pub fn into_format(self, index: usize) -> String {
+        let author = self.user_name.as_deref().unwrap_or("未知");
+        let title = strip_html(&self.title);
+        let summary = strip_html(&self.content);
+        let summary = if summary.chars().count() > 120 {
+            format!("{}...", summary.chars().take(120).collect::<String>())
+        } else {
+            summary
+        };
+        format!(
+            "{index:>4}. {title}\n     {summary}\n     {author}  |  浏览: {views}  |  推荐: {votes}  |  评论: {comments}  |  发布于: {time}\n",
+            index = index + 1,
+            title = title.bold().cyan(),
+            summary = summary.dimmed(),
+            author = author.yellow(),
+            views = self.view_times,
+            votes = self.vote_times,
+            comments = self.comment_times,
+            time = self.publish_time,
+        )
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+#[serde(rename_all = "PascalCase")]
 pub struct NewsDetail {
     pub news_id: u64,
     #[serde(default, deserialize_with = "deserialize_tags")]

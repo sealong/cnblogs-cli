@@ -99,7 +99,7 @@ cnb <command> <subcommand> [option] [arg]
 | `user`  | User module      | `login`, `logout`, `status`                 |
 | `ing`   | Moments module   | `create`, `delete`, `list`, `show`, `reply` |
 | `post`  | posts module     | `list`, `show`, `reply`                     |
-| `news`  | news module      | `list`                                      |
+| `news`  | news module      | `list`, `show`, `search`                    |
 | `fav`   | bookmarks module | `list`                                      |
 
 ### Usage Examples
@@ -124,6 +124,10 @@ cnb ing create 'Hello world!' --tag lucky
 
 # Comment to ing
 cnb  ing replay 'Awesome!' --id 114514
+
+# Search news
+cnb news search "rust"
+cnb news search "AI" --min-views 100 --start-date 2026-01-01
 ```
 
 For more information, try `cnb --help` or `cnb help`.

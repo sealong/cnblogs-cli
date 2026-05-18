@@ -2,7 +2,11 @@ use anyhow::Result;
 use reqwest::{Client, Response};
 use serde::Serialize;
 
-use crate::{api::urls::OPENAPI, models::news::{NewsInfo, NewsDetail}, tools::IntoAnyhowResult};
+use crate::{
+    api::urls::OPENAPI,
+    models::news::{NewsInfo, NewsDetail, ZzkDocument},
+    tools::IntoAnyhowResult,
+};
 
 pub async fn list_news(c: &Client, page: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
     let resp = raw_list_news(c, page).await?;
@@ -32,4 +36,21 @@ pub async fn get_news_detail(c: &Client, id: u64) -> Result<NewsDetail> {
 pub async fn raw_get_news_detail(c: &Client, id: u64) -> Result<Response> {
     let url = format!("{}/newsitems/{}", OPENAPI, id);
     c.get(url).send().await.into_anyhow_result()
+}
+
+pub async fn search_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Vec<ZzkDocument>> {
+    let resp = raw_search_news(c, params).await?;
+    resp.error_for_status()?
+        .json()
+        .await
+        .into_anyhow_result()
+}
+
+pub async fn raw_search_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Response> {
+    let url = format!("{}/ZzkDocuments/News", OPENAPI);
+    c.get(url)
+        .query(&params)
+        .send()
+        .await
+        .into_anyhow_result()
 }

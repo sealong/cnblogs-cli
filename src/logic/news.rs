@@ -3,7 +3,7 @@ use termimad::MadSkin;
 
 use crate::{
     api,
-    commands::news::{ListArgs, NewsAction, NewsCommand, ShowArgs},
+    commands::news::{ListArgs, NewsAction, NewsCommand, SearchArgs, ShowArgs},
     context::Context,
 };
 
@@ -11,6 +11,7 @@ pub async fn endpoint(cmd: NewsCommand, ctx: &mut Context) -> Result<()> {
     match cmd.commands {
         NewsAction::List(arg) => handle_list(arg, ctx).await,
         NewsAction::Show(arg) => handle_show(arg, ctx).await,
+        NewsAction::Search(arg) => handle_search(arg, ctx).await,
     }
 }
 
@@ -45,6 +46,21 @@ async fn handle_show(arg: ShowArgs, ctx: &mut Context) -> Result<()> {
     let md = html2md::parse_html(&clean_content);
     let mds = MadSkin::default_light();
     mds.write_text_on(&mut ctx.terminal.stdout, &md)?;
+    Ok(())
+}
+
+async fn handle_search(arg: SearchArgs, ctx: &mut Context) -> Result<()> {
+    let results = api::news::search_news(&ctx.client, arg).await?;
+
+    if ctx.json {
+        ctx.terminal.json(&results)?;
+        return Ok(());
+    }
+
+    for (index, doc) in results.into_iter().enumerate() {
+        ctx.terminal.writeln(doc.into_format(index))?;
+    }
+
     Ok(())
 }
 

@@ -102,7 +102,7 @@ cnb <命令> <子命令> [选项] [参数]
 | `user` | 用户模块 | `login`, `logout`, `status`                 |
 | `ing`  | 闪存管理 | `create`, `delete`, `list`, `show`, `reply` |
 | `post` | 博客文章 | `list`, `show`, `reply`                     |
-| `news` | 新闻   | `list`                                      |
+| `news` | 新闻   | `list`, `show`, `search`                    |
 | `fav`  | 书签   | `list`                                      |
 
 ### 使用示例
@@ -125,6 +125,10 @@ cnb ing create 'Hello world!' --tag lucky
 
 # 发布评论
 cnb  ing replay 'Awesome!' --id 114514
+
+# 搜索新闻
+cnb news search "rust"
+cnb news search "AI" --min-views 100 --start-date 2026-01-01
 ```
 
 更多使用信息请通过`cnb --help`或者`cnb help`查询
