@@ -12,10 +12,10 @@ use crate::{
     api,
     commands::news::{
         HotArgs, HotWeekArgs, ListArgs, NewsAction, NewsCommand, RecommendedArgs, SearchArgs,
-        ShowArgs,
+        SearchSort, ShowArgs,
     },
     context::Context,
-    models::news::{NewsDetail, NewsInfo},
+    models::news::{NewsDetail, NewsInfo, strip_html},
 };
 
 /// 批量 `news show` 的单条结果：成功包 detail，失败包 error 字符串。
@@ -120,7 +120,8 @@ async fn handle_show(arg: ShowArgs, ctx: &mut Context) -> Result<()> {
     }
 
     // 多 ID 或 --stdin → 并发拉取，强制输出 JSON 数组（html→md 渲染对批量调用方是噪声）
-    let results = fetch_details_concurrent(&ids, &ctx.client, arg.max_concurrent).await;
+    let results =
+        fetch_details_concurrent(&ids, &ctx.client, arg.max_concurrent, arg.include_html).await;
     let any_ok = results.iter().any(|r| matches!(r, DetailResult::Ok { .. }));
     ctx.terminal.json(&results)?;
     // stdout 已经写出完整结果，skill 仍可解析每条 error；exit code 让快路径用 `$?` 判整批失败
@@ -185,6 +186,7 @@ async fn fetch_details_concurrent(
     ids: &[u64],
     client: &Client,
     max_concurrent: u32,
+    include_html: bool,
 ) -> Vec<DetailResult> {
     let sem = Arc::new(Semaphore::new(max_concurrent as usize));
     let mut set = JoinSet::new();
@@ -200,6 +202,11 @@ async fn fetch_details_concurrent(
             let r = match api::news::get_news_detail(&client, id).await {
                 Ok(mut detail) => {
                     enrich_with_markdown(&mut detail).await;
+                    // 默认丢弃 HTML 原文，避免 stdout 同时含 HTML+Markdown（95% 重复）
+                    // serialize 阶段 skip_serializing_if = String::is_empty 会让 Content 字段不出现
+                    if !include_html {
+                        detail.content.clear();
+                    }
                     Ok(detail)
                 }
                 Err(e) => Err(e),
@@ -229,11 +236,36 @@ async fn fetch_details_concurrent(
 }
 
 async fn handle_search(arg: SearchArgs, ctx: &mut Context) -> Result<()> {
-    let title_only = arg.title_only;
-    let results = api::news::search_news(&ctx.client, arg).await?;
+    let (title_only, ids_only, sort, limit) = (arg.title_only, arg.ids_only, arg.sort, arg.limit);
+    let mut results = api::news::search_news(&ctx.client, arg).await?;
+
+    // R3: 清洗搜索高亮标签（cnblogs 搜索引擎给 Title/Content 加 <strong>...</strong>）
+    // 同时解码 HTML 实体如 &#160;，让 --json 消费方拿到的字段跟 show 详情一致
+    for doc in &mut results {
+        doc.title = strip_html(&doc.title);
+        doc.content = strip_html(&doc.content);
+    }
+
+    // R1: 客户端按 PublishTime 倒序（ISO8601 字符串的字典序与时间倒序一致）
+    if matches!(sort, SearchSort::Time) {
+        results.sort_by(|a, b| b.publish_time.cmp(&a.publish_time));
+    }
+
+    // R2: 客户端 limit（cnblogs 单页最多 15，limit ≤ 15 时安全截断）
+    results.truncate(limit as usize);
 
     if ctx.json {
         ctx.terminal.json(&results)?;
+        return Ok(());
+    }
+
+    if ids_only {
+        // 解不出新闻 id 的项跳过，避免污染下游 pipe（ZzkDocument.id 可能是 doc-xxx 这种字符串）
+        for doc in &results {
+            if let Some(id) = doc.news_id() {
+                ctx.terminal.writeln(id)?;
+            }
+        }
         return Ok(());
     }
 

@@ -1,5 +1,14 @@
-use clap::{Args, Subcommand, builder::NonEmptyStringValueParser};
+use clap::{Args, Subcommand, ValueEnum, builder::NonEmptyStringValueParser};
 use serde::Serialize;
+
+/// search 客户端排序模式
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum SearchSort {
+    /// 按 cnblogs 搜索引擎相关度（默认，API 原序）
+    Relevance,
+    /// 按 PublishTime 倒序（客户端排序）
+    Time,
+}
 
 use crate::commands::validate_non_zero_id;
 
@@ -68,6 +77,11 @@ pub struct ShowArgs {
         value_parser = clap::value_parser!(u32).range(1..=64),
     )]
     pub max_concurrent: u32,
+
+    /// 批量模式默认 omit Content（HTML 原文），只输出 MarkdownContent。
+    /// 加此 flag 时连 HTML 一起输出；单 ID 模式不受影响（始终保留 HTML）
+    #[arg(long = "include-html", default_value_t = false)]
+    pub include_html: bool,
 }
 
 /// 搜索新闻
@@ -102,6 +116,25 @@ pub struct SearchArgs {
     #[arg(long = "title-only", default_value_t = false)]
     #[serde(skip)]
     pub title_only: bool,
+
+    /// 仅输出新闻 ID（每行一个），便于管道：`cnb news search "AI" --ids-only | cnb news show --stdin`
+    #[arg(long = "ids-only", default_value_t = false)]
+    #[serde(skip)]
+    pub ids_only: bool,
+
+    /// 客户端排序方式（cnblogs 搜索 API 默认按相关度返回；time 时本地按 PublishTime 倒序）
+    #[arg(long = "sort", default_value = "relevance", value_enum)]
+    #[serde(skip)]
+    pub sort: SearchSort,
+
+    /// 限制返回条数（cnblogs 搜索单页最多 15 条，默认 15）
+    #[arg(
+        long = "limit",
+        default_value_t = 15,
+        value_parser = clap::value_parser!(u32).range(1..=15),
+    )]
+    #[serde(skip)]
+    pub limit: u32,
 }
 
 /// 热门新闻（区间）

@@ -77,7 +77,7 @@ lazy_static::lazy_static! {
         regex::Regex::new(r"/n/(\d+)").expect("无效的新闻 URI 正则");
 }
 
-fn strip_html(s: &str) -> String {
+pub(crate) fn strip_html(s: &str) -> String {
     let no_tags = HTML_TAG_REGEX.replace_all(s, "");
     decode_html_entities(&no_tags)
 }
@@ -174,6 +174,9 @@ pub struct NewsDetail {
     pub title: String,
     pub publish_time: String,
     pub pic_name: Option<String>,
+    /// HTML 原文。批量 show 默认会在 enrich 后清空（除非 --include-html），
+    /// 避免 stdout 同时含 HTML 和 Markdown 副本（实测 95% 内容重复）
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub content: String,
 
     /// 派生字段：把 `content`（HTML）转成 Markdown。
