@@ -102,7 +102,7 @@ cnb <命令> <子命令> [选项] [参数]
 | `user` | 用户模块 | `login`, `logout`, `status`                 |
 | `ing`  | 闪存管理 | `create`, `delete`, `list`, `show`, `reply` |
 | `post` | 博客文章 | `list`, `show`, `reply`                     |
-| `news` | 新闻   | `list`, `show`, `search`                    |
+| `news` | 新闻   | `list`, `show`, `search`, `hot`, `hot-week`, `recommended` |
 | `fav`  | 书签   | `list`                                      |
 
 ### 使用示例
@@ -129,7 +129,30 @@ cnb  ing replay 'Awesome!' --id 114514
 # 搜索新闻
 cnb news search "rust"
 cnb news search "AI" --min-views 100 --start-date 2026-01-01
+
+# 浏览新闻列表
+cnb news list --page-size 5                       # 最新
+cnb news hot --last-days 7                        # 最近 7 天热门（默认）
+cnb news hot --start-date 2026-05-01 --end-date 2026-05-23
+cnb news hot-week                                 # 本周热门
+cnb news recommended                              # 推荐
+
+# 查看单条/多条新闻详情（批量为并发）
+cnb news show 822790                              # 单条，人类友好渲染
+cnb news show 822790 822789 822788 --json         # 批量 → JSON 数组
+echo "822790 822789" | cnb news show --stdin --json
+cnb news show 822790 --json | jq '.MarkdownContent'   # 拿 Markdown 正文
+
+# Skill / 管道友好：列表只输出 ID，批量并发拉详情
+cnb news list --page-size 5 --ids-only | cnb news show --stdin --json
+cnb news hot --ids-only | cnb news show --stdin --max-concurrent 4 --json
 ```
+
+JSON 输出额外提供脚本/skill 实用的派生字段：
+
+- `news list/hot/hot-week/recommended --json` 每项带派生 `Url` 字段（`https://news.cnblogs.com/n/<id>/`）。
+- `news show ... --json` 带派生 `MarkdownContent` 字段（HTML 正文转 Markdown）。
+- 批量 `news show` 返回 `[{status, id, detail | error}, ...]`。**只有**所有 ID 都失败时退出码非零；部分失败保持 exit 0，每条错误进数组。
 
 更多使用信息请通过`cnb --help`或者`cnb help`查询
 

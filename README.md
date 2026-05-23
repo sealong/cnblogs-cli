@@ -99,7 +99,7 @@ cnb <command> <subcommand> [option] [arg]
 | `user`  | User module      | `login`, `logout`, `status`                 |
 | `ing`   | Moments module   | `create`, `delete`, `list`, `show`, `reply` |
 | `post`  | posts module     | `list`, `show`, `reply`                     |
-| `news`  | news module      | `list`, `show`, `search`                    |
+| `news`  | news module      | `list`, `show`, `search`, `hot`, `hot-week`, `recommended` |
 | `fav`   | bookmarks module | `list`                                      |
 
 ### Usage Examples
@@ -128,7 +128,30 @@ cnb  ing replay 'Awesome!' --id 114514
 # Search news
 cnb news search "rust"
 cnb news search "AI" --min-views 100 --start-date 2026-01-01
+
+# Browse news lists
+cnb news list --page-size 5                       # latest news
+cnb news hot --last-days 7                        # hot in last 7 days (default)
+cnb news hot --start-date 2026-05-01 --end-date 2026-05-23
+cnb news hot-week                                 # this week's hot
+cnb news recommended                              # recommended
+
+# View one or many news details (batch is concurrent)
+cnb news show 822790                              # single, human-friendly render
+cnb news show 822790 822789 822788 --json         # batch → JSON array
+echo "822790 822789" | cnb news show --stdin --json
+cnb news show 822790 --json | jq '.MarkdownContent'   # detail body as Markdown
+
+# Skill / pipeline friendly: list IDs only, batch fetch details concurrently
+cnb news list --page-size 5 --ids-only | cnb news show --stdin --json
+cnb news hot --ids-only | cnb news show --stdin --max-concurrent 4 --json
 ```
+
+JSON output adds derived fields useful for scripts/skills:
+
+- `news list/hot/hot-week/recommended --json` items include a derived `Url` field (`https://news.cnblogs.com/n/<id>/`).
+- `news show ... --json` adds a derived `MarkdownContent` field (HTML body converted to Markdown).
+- Batch `news show` returns `[{status, id, detail | error}, ...]`. Exit code is non-zero only when *all* IDs fail; partial failures keep exit 0 with per-item errors in the array.
 
 For more information, try `cnb --help` or `cnb help`.
 
