@@ -14,7 +14,7 @@ use crate::models::user::UserInfo;
 const CACHE_DIR: &str = ".cnblogs";
 const CACHE: &str = "token";
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Cache {
     pub id: u64,
@@ -33,6 +33,14 @@ impl Cache {
         Ok(serde_json::to_vec(self)?)
     }
 
+    /// 更新用户字段，保留已有 token。
+    pub fn apply_user(&mut self, user: &UserInfo) {
+        self.id = user.account_id;
+        self.blog_id = user.blog_id;
+        self.blog_app = user.blog_app.clone();
+        self.username = user.display_name.clone();
+    }
+
     /// 检查 token 是否为空
     pub fn is_token_empty(&self) -> bool {
         self.token.trim().is_empty()
@@ -46,13 +54,9 @@ impl Cache {
 
 impl From<UserInfo> for Cache {
     fn from(value: UserInfo) -> Self {
-        Self {
-            id: value.account_id,
-            blog_id: value.blog_id,
-            blog_app: value.blog_app,
-            username: value.display_name,
-            token: "".to_string(),
-        }
+        let mut cache = Self::default();
+        cache.apply_user(&value);
+        cache
     }
 }
 
@@ -124,5 +128,65 @@ impl CacheDir {
         let mut f = File::open(self.full_cache_file())?;
         f.read_to_end(&mut buf)?;
         Ok(buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_user() -> UserInfo {
+        UserInfo {
+            user_id: "u".into(),
+            space_user_id: 1,
+            account_id: 42,
+            blog_id: 7,
+            display_name: "alice".into(),
+            face: String::new(),
+            avatar: String::new(),
+            seniority: String::new(),
+            blog_app: "alice-blog".into(),
+            following_count: 0,
+            follower_count: 0,
+            is_vip: false,
+            joined: String::new(),
+        }
+    }
+
+    #[test]
+    fn apply_user_preserves_existing_token() {
+        let mut cache = Cache {
+            token: "pat-secret".into(),
+            id: 1,
+            ..Cache::default()
+        };
+        cache.apply_user(&sample_user());
+
+        assert_eq!(cache.token, "pat-secret");
+        assert_eq!(cache.id, 42);
+        assert_eq!(cache.blog_id, 7);
+        assert_eq!(cache.blog_app, "alice-blog");
+        assert_eq!(cache.username, "alice");
+    }
+
+    #[test]
+    fn status_cache_roundtrip_keeps_token() {
+        let mut cache = Cache {
+            token: "pat-secret".into(),
+            ..Cache::default()
+        };
+        cache.apply_user(&sample_user());
+
+        let loaded = Cache::from_bytes(&cache.to_bytes().unwrap()).unwrap();
+        assert_eq!(loaded.token, "pat-secret");
+        assert_eq!(loaded.id, 42);
+        assert!(loaded.is_valid());
+    }
+
+    #[test]
+    fn from_user_info_does_not_invent_token() {
+        let cache = Cache::from(sample_user());
+        assert!(cache.is_token_empty());
+        assert_eq!(cache.id, 42);
     }
 }

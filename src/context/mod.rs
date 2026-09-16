@@ -33,13 +33,7 @@ impl Context {
         let buf = path.read()?;
         let cache = Cache::from_bytes(&buf).unwrap_or_default();
         let terminal = Terminal::new();
-        let mut headers = HeaderMap::new();
-
-        if !cache.token.is_empty() {
-            let header_value = format!("Bearer {}", cache.token);
-            headers.append(header::AUTHORIZATION, header_value.parse()?);
-            headers.append("authorization-type", "pat".parse()?);
-        }
+        let headers = pat_headers(&cache.token)?;
 
         let mut builder = ClientBuilder::new()
             .default_headers(headers)
@@ -77,7 +71,46 @@ impl Context {
     }
 
     /// 保存之缓存文件
-    pub fn save_cache(&self, cache: Cache) -> Result<()> {
-        self.path.write(&cache.to_bytes()?)
+    pub fn save_cache(&mut self, cache: Cache) -> Result<()> {
+        self.path.write(&cache.to_bytes()?)?;
+        self.cache = cache;
+        Ok(())
+    }
+}
+
+pub(crate) fn pat_headers(token: &str) -> Result<HeaderMap> {
+    let mut headers = HeaderMap::new();
+    if !token.trim().is_empty() {
+        let header_value = format!("Bearer {}", token);
+        headers.append(header::AUTHORIZATION, header_value.parse()?);
+        headers.append("authorization-type", "pat".parse()?);
+    }
+    Ok(headers)
+}
+
+#[cfg(test)]
+mod tests {
+    use reqwest::header::{AUTHORIZATION, HeaderValue};
+
+    use super::pat_headers;
+
+    #[test]
+    fn pat_headers_empty_token_has_no_auth() {
+        let headers = pat_headers("").unwrap();
+        assert!(headers.get(AUTHORIZATION).is_none());
+        assert!(headers.get("authorization-type").is_none());
+    }
+
+    #[test]
+    fn pat_headers_include_bearer_and_pat_type() {
+        let headers = pat_headers("secret").unwrap();
+        assert_eq!(
+            headers.get(AUTHORIZATION).unwrap(),
+            &HeaderValue::from_static("Bearer secret")
+        );
+        assert_eq!(
+            headers.get("authorization-type").unwrap(),
+            &HeaderValue::from_static("pat")
+        );
     }
 }

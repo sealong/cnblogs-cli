@@ -4,12 +4,11 @@
 
 use anyhow::Result;
 use owo_colors::OwoColorize;
-use reqwest::header::{AUTHORIZATION, HeaderMap};
 use reqwest::{ClientBuilder, StatusCode};
 
 use crate::commands::user::{FollowArg, UserAction, UserCommand};
-use crate::context::Context;
 use crate::context::config::Cache;
+use crate::context::{Context, pat_headers};
 use crate::tools::http::IntoNoParseResult;
 use crate::{api, models};
 
@@ -25,11 +24,9 @@ pub async fn endpoint(cmd: UserCommand, ctx: &mut Context) -> anyhow::Result<()>
 }
 
 async fn handle_login(token: String, ctx: &mut Context) -> Result<()> {
-    let header_value = format!("Bearer {}", token);
-    let mut header = HeaderMap::new();
-    header.insert(AUTHORIZATION, header_value.parse()?);
-
-    let client = ClientBuilder::new().default_headers(header).build()?;
+    let client = ClientBuilder::new()
+        .default_headers(pat_headers(&token)?)
+        .build()?;
     let resp = api::user::raw_user_info(&client).await?;
 
     if resp.status().eq(&StatusCode::UNAUTHORIZED) {
@@ -62,7 +59,8 @@ fn handle_print_token(ctx: &mut Context) -> Result<()> {
 
 async fn user_info(ctx: &mut Context) -> Result<()> {
     let user = api::user::user_info(&ctx.client).await?;
-    let c: Cache = user.clone().into();
+    let mut c = ctx.cache.clone();
+    c.apply_user(&user);
     ctx.save_cache(c)?;
     ctx.terminal.writeln(user.format_user_info())
 }
