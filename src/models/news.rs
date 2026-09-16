@@ -46,11 +46,9 @@ impl NewsInfo {
     }
 
     pub fn into_title_format(self, index: usize) -> String {
-        format!(
-            "{index:>4}. {title}",
-            index = index + 1,
-            title = self.title
-        ).bright_white().to_string()
+        format!("{index:>4}. {title}", index = index + 1, title = self.title)
+            .bright_white()
+            .to_string()
     }
 }
 
@@ -100,7 +98,11 @@ fn render_publish_time(raw: &str) -> String {
     if let Ok(dt) = DateTime::parse_from_rfc3339(raw) {
         return dt.with_timezone(&Utc).as_time_age();
     }
-    for fmt in ["%Y-%m-%dT%H:%M:%S%.f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"] {
+    for fmt in [
+        "%Y-%m-%dT%H:%M:%S%.f",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+    ] {
         if let Ok(ndt) = NaiveDateTime::parse_from_str(raw, fmt) {
             let utc = ndt - Duration::from_secs(8 * 3600);
             if let chrono::LocalResult::Single(dt) = Utc.from_local_datetime(&utc) {
@@ -267,7 +269,10 @@ mod tests {
     fn decode_entities_handles_amp_last() {
         // 关键：&amp;lt; 应解码为 "&lt;"，而不是 "<"
         assert_eq!(decode_html_entities("&amp;lt;"), "&lt;");
-        assert_eq!(decode_html_entities("a&nbsp;b&amp;c&lt;d&gt;e&quot;f&#39;g"), "a b&c<d>e\"f'g");
+        assert_eq!(
+            decode_html_entities("a&nbsp;b&amp;c&lt;d&gt;e&quot;f&#39;g"),
+            "a b&c<d>e\"f'g"
+        );
     }
 
     #[test]

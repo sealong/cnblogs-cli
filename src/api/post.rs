@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     api::urls::{BLOG_POST_PREFIX, POST_PREFIX},
-    models::post::PostInfo,
+    models::{news::ZzkDocument, post::PostInfo},
     tools::IntoAnyhowResult,
 };
 
@@ -14,13 +14,51 @@ pub async fn list_someone_post(
     params: impl Serialize + Send + Sync,
 ) -> Result<Vec<PostInfo>> {
     let resp = raw_list_someone_post(c, blog_app, params).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
 pub async fn show_post_detail() {}
+
+pub async fn get_post_body(c: &Client, id: u64) -> Result<String> {
+    let resp = raw_show_post(c, id).await?;
+    let status = resp.status();
+    let body = resp.text().await.into_anyhow_result()?;
+
+    if !status.is_success() {
+        anyhow::bail!(
+            "获取博客文章详情失败 (id={id}, HTTP {code}): {body}",
+            id = id,
+            code = status.as_u16(),
+            body = body,
+        );
+    }
+
+    serde_json::from_str::<String>(&body).map_err(|e| {
+        anyhow::anyhow!(
+            "解析博客文章详情失败 (id={id}, HTTP {code}): {err}; body preview: {body}",
+            id = id,
+            code = status.as_u16(),
+            err = e,
+            body = body.chars().take(200).collect::<String>(),
+        )
+    })
+}
+
+pub async fn search_posts(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Vec<ZzkDocument>> {
+    let resp = raw_search_posts(c, params).await?;
+    resp.error_for_status()?.json().await.into_anyhow_result()
+}
+
+pub async fn raw_search_posts(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Response> {
+    let url = format!("{}/ZzkDocuments/Blog", crate::api::urls::OPENAPI);
+    c.get(url).query(&params).send().await.into_anyhow_result()
+}
 
 /// 获取指定用户的随笔列表（支持分页）
 ///

@@ -43,7 +43,11 @@ impl Terminal {
     }
 
     pub fn json(&mut self, msg: impl Serialize) -> Result<()> {
-        Ok(writeln!(self.stdout, "{}", serde_json::to_string_pretty(&msg)?)?)
+        Ok(writeln!(
+            self.stdout,
+            "{}",
+            serde_json::to_string_pretty(&msg)?
+        )?)
     }
 
     /// 打印信息（普通输出）

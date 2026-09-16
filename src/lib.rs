@@ -7,5 +7,6 @@ pub mod commands;
 pub mod context;
 pub mod display;
 pub mod logic;
+pub mod mcp;
 pub mod models;
 pub mod tools;

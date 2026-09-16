@@ -148,6 +148,44 @@ cnb news list --page-size 5 --ids-only | cnb news show --stdin --json
 cnb news hot --ids-only | cnb news show --stdin --max-concurrent 4 --json
 ```
 
+### LM Studio MCP 新闻和博客文章工具
+
+本项目提供只读 MCP 服务，可在 LM Studio chat 窗口中调用博客园新闻和博客文章查询能力。
+
+构建服务：
+
+```sh
+cargo build --release --bin cnb-mcp
+```
+
+在 LM Studio 右侧 `Program` 面板中选择 `Install > Edit mcp.json`，添加：
+
+```json
+{
+  "mcpServers": {
+    "cnb-mcp": {
+      "command": "/path/to/cnb-mcp"
+    }
+  }
+}
+```
+
+请将 `/path/to/cnb-mcp` 替换为本机编译得到的 `cnb-mcp` 可执行文件路径，例如项目目录下的 `target/release/cnb-mcp`。
+
+可用工具：
+
+| 工具 | 描述 |
+|------|------|
+| `cnb_news_list` | 获取最新新闻 |
+| `cnb_news_search` | 按关键词搜索新闻 |
+| `cnb_news_show` | 获取单条或多条新闻详情 |
+| `cnb_news_hot` | 获取指定区间或最近 N 天热门新闻 |
+| `cnb_news_hot_week` | 获取本周热门新闻 |
+| `cnb_news_recommended` | 获取推荐新闻 |
+| `cnb_post_list` | 获取指定博客的文章列表；不传 `blog_app` 时使用当前登录账号 |
+| `cnb_post_search` | 全站搜索博客文章 |
+| `cnb_post_show` | 获取单篇博客文章正文，返回 MarkdownContent |
+
 JSON 输出额外提供脚本/skill 实用的派生字段：
 
 - `news list/hot/hot-week/recommended --json` 每项带派生 `Url` 字段（`https://news.cnblogs.com/n/<id>/`）。

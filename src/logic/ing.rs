@@ -8,9 +8,7 @@ use crate::context::Context;
 use crate::tools::http::IntoNoParseResult;
 use crate::{
     api,
-    commands::ing::{
-        IngAction, IngContent, IngDelete, IngListArg, IngReplyContent, IngShowDetail,
-    },
+    commands::ing::{IngAction, IngContent, IngDelete, IngListArg, IngReplyContent, IngShowDetail},
 };
 
 pub async fn endpoint(cmd: IngAction, ctx: &mut Context) -> Result<()> {

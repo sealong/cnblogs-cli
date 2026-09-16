@@ -279,4 +279,3 @@ async fn handle_search(arg: SearchArgs, ctx: &mut Context) -> Result<()> {
 
     Ok(())
 }
-

@@ -4,25 +4,18 @@ use serde::Serialize;
 
 use crate::{
     api::urls::OPENAPI,
-    models::news::{NewsInfo, NewsDetail, ZzkDocument},
+    models::news::{NewsDetail, NewsInfo, ZzkDocument},
     tools::IntoAnyhowResult,
 };
 
 pub async fn list_news(c: &Client, page: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
     let resp = raw_list_news(c, page).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
 pub async fn raw_list_news(c: &Client, page: impl Serialize + Send + Sync) -> Result<Response> {
     let url = format!("{}/{}", OPENAPI, "newsitems");
-    c.get(url)
-    .query(&page)
-    .send()
-    .await
-    .into_anyhow_result()
+    c.get(url).query(&page).send().await.into_anyhow_result()
 }
 
 pub async fn get_news_detail(c: &Client, id: u64) -> Result<NewsDetail> {
@@ -80,29 +73,22 @@ pub async fn raw_get_news_detail(c: &Client, id: u64) -> Result<Response> {
     c.get(url).send().await.into_anyhow_result()
 }
 
-pub async fn search_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Vec<ZzkDocument>> {
+pub async fn search_news(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Vec<ZzkDocument>> {
     let resp = raw_search_news(c, params).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
 pub async fn raw_search_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Response> {
     let url = format!("{}/ZzkDocuments/News", OPENAPI);
-    c.get(url)
-        .query(&params)
-        .send()
-        .await
-        .into_anyhow_result()
+    c.get(url).query(&params).send().await.into_anyhow_result()
 }
 
 pub async fn hot_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
     let resp = raw_hot_news(c, params).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
 pub async fn raw_hot_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Response> {
@@ -110,28 +96,34 @@ pub async fn raw_hot_news(c: &Client, params: impl Serialize + Send + Sync) -> R
     c.get(url).query(&params).send().await.into_anyhow_result()
 }
 
-pub async fn hot_week_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
+pub async fn hot_week_news(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Vec<NewsInfo>> {
     let resp = raw_hot_week_news(c, params).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
-pub async fn raw_hot_week_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Response> {
+pub async fn raw_hot_week_news(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Response> {
     let url = format!("{}/newsitems/@hot-week", OPENAPI);
     c.get(url).query(&params).send().await.into_anyhow_result()
 }
 
-pub async fn recommended_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Vec<NewsInfo>> {
+pub async fn recommended_news(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Vec<NewsInfo>> {
     let resp = raw_recommended_news(c, params).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
-pub async fn raw_recommended_news(c: &Client, params: impl Serialize + Send + Sync) -> Result<Response> {
+pub async fn raw_recommended_news(
+    c: &Client,
+    params: impl Serialize + Send + Sync,
+) -> Result<Response> {
     let url = format!("{}/newsitems/@recommended", OPENAPI);
     c.get(url).query(&params).send().await.into_anyhow_result()
 }

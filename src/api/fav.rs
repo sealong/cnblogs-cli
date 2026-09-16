@@ -9,10 +9,7 @@ pub async fn list_bookmarks(
     page: impl Serialize + Send + Sync,
 ) -> Result<Vec<FavInfo>> {
     let resp = raw_list_bookmarks(c, page).await?;
-    resp.error_for_status()?
-        .json()
-        .await
-        .into_anyhow_result()
+    resp.error_for_status()?.json().await.into_anyhow_result()
 }
 
 pub async fn raw_list_bookmarks(
