@@ -9,3 +9,7 @@ target
 docs
 
 CLAUDE.md
+
+.env
+.env.*
+.cnblogs/
